@@ -1,6 +1,6 @@
-# crosec-tcss
+# Chromebook TCSS MUX Driver
 
-**crosec-tcss** (`CrosTcssMux.sys`) is a Windows Kernel-Mode Driver Framework (KMDF) driver that provides USB Type-C Subsystem (TCSS) crossbar muxing for Intel-based Chromebooks running Windows.
+`Chromebook TCSS MUX Driver` is a Windows Kernel-Mode Driver Framework (KMDF) driver that provides USB Type-C Subsystem (TCSS) crossbar muxing for Intel-based Chromebooks running Windows.
 
 On Chromebooks running coreboot / UEFI firmware, the physical USB-C pins are routed through an internal Intel Power Management Controller (PMC) North Mux-Agent crossbar. This driver bridges the ChromeOS Embedded Controller (`ACPI\GOOG0014`) with the Intel PMC IPC MMIO registers, dynamically configuring:
 - USB 2.0 / USB 3.x data routing
