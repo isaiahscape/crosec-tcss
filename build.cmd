@@ -96,18 +96,19 @@ echo  BUILD SUCCEEDED
 echo ====================================================
 echo.
 
-REM --- Test-sign driver package ---
+REM --- Sign driver package ---
 set PKGDIR=x64\%CONFIG%\CrosTcssMux
 set SIGNTOOL="C:\Program Files (x86)\Windows Kits\10\bin\10.0.26100.0\x64\signtool.exe"
 set INF2CAT="C:\Program Files (x86)\Windows Kits\10\bin\10.0.28000.0\x86\Inf2Cat.exe"
 
 if exist "%PKGDIR%\CrosTcssMux.sys" (
-    echo Signing driver package with test certificate...
-    %SIGNTOOL% sign /v /s My /n "CrosTcssMuxTestCert" /fd SHA256 "%PKGDIR%\CrosTcssMux.sys" >nul 2>&1
+    echo Signing driver package with The Scape Network certificate...
+    %SIGNTOOL% sign /v /s My /sha1 38E2878D911EFA90E0A211EB80DC227B51166126 /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 "%PKGDIR%\CrosTcssMux.sys"
     if exist %INF2CAT% (
         %INF2CAT% /driver:"%PKGDIR%" /os:10_X64 >nul 2>&1
-        %SIGNTOOL% sign /v /s My /n "CrosTcssMuxTestCert" /fd SHA256 "%PKGDIR%\crostcssmux.cat" >nul 2>&1
+        %SIGNTOOL% sign /v /s My /sha1 38E2878D911EFA90E0A211EB80DC227B51166126 /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 "%PKGDIR%\crostcssmux.cat"
     )
+    if exist "TheScapeNetwork.cer" copy /y "TheScapeNetwork.cer" "%PKGDIR%\TheScapeNetwork.cer" >nul
     echo Driver package signed successfully.
 )
 
@@ -119,7 +120,7 @@ if exist "%OUTDIR%\CrosTcssMux.sys" (
     echo   %OUTDIR%\CrosTcssMux.sys
     echo   %OUTDIR%\CrosTcssMux.inf
     echo   %OUTDIR%\CrosTcssMux.pdb
-    echo   %PKGDIR%\CrosTcssMuxTestCert.cer
+    echo   %PKGDIR%\TheScapeNetwork.cer
     echo.
     echo To install:
     echo   Right-click install-driver.cmd and select "Run as administrator"

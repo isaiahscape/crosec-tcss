@@ -37,4 +37,5 @@ Release/
 # Crash dumps & temp files
 *.dmp
 *.tmp
+*.zip
 minidump.dmp
