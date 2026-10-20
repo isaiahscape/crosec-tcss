@@ -155,10 +155,13 @@ CrosTcss_EvtEventWorkItem(
         }
     }
 
-    /* ---- Phase 3: Update all ports if any change detected ---- */
-    if (anyPortChanged) {
-        CrosTcss_ProcessAllPorts(devCtx);
-    }
+    /* ---- Phase 3: Always update and synchronize all ports ----
+     * We don't rely solely on MKBP or Host Event B flags because crosec.sys
+     * (the main ChromeOS EC driver) often drains or clears EC events before
+     * this driver can observe them. CrosTcss_ProcessPortUpdate queries the EC
+     * and returns immediately if nothing changed, ensuring reliable hotplug
+     * with minimal CPU overhead. */
+    CrosTcss_ProcessAllPorts(devCtx);
 
     /* Clear the queued flag so we can accept new events */
     InterlockedExchange(&devCtx->EventWorkItemQueued, 0);
@@ -264,9 +267,11 @@ CrosTcss_ProcessPortUpdate(
 
     /* ---- CASE 1: Complete disconnect (all flags cleared) ---- */
     if (newMuxState == USB_PD_MUX_NONE) {
-        if (port->Connected || port->PmcConfigured) {
+        /* If port was connected OR has not yet been initialized into the
+         * disconnected state in the PMC crossbar on boot, send DISCONNECT. */
+        if (port->Connected || !port->PmcConfigured) {
             KdPrintEx((DPFLTR_DEFAULT_ID, DPFLTR_INFO_LEVEL,
-                "CrosTcssMux: Port %d disconnected — sending PMC DISCONNECT\n",
+                "CrosTcssMux: Port %d disconnected/idle — initializing PMC DISCONNECT\n",
                 PortIndex));
 
             status = CrosTcss_BuildModeData(DevCtx, PortIndex, 0,
@@ -277,7 +282,7 @@ CrosTcss_ProcessPortUpdate(
             }
 
             port->Connected = FALSE;
-            port->PmcConfigured = FALSE;
+            port->PmcConfigured = TRUE;  /* Confirmed in clean disconnected state */
             port->CableVdo = 0;
             port->TbtCableVdo = 0;
             port->LastModeData = 0;

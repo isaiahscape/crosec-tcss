@@ -220,10 +220,10 @@ CrosTcss_EvtDeviceAdd(
         return status;
     }
 
-    /* Create watchdog timer (2000ms periodic) */
-    WDF_TIMER_CONFIG_INIT_PERIODIC(&timerConfig, CrosTcss_EvtWatchdogTimer, 2000);
+    /* Create watchdog timer (250ms periodic for responsive hotplug detection) */
+    WDF_TIMER_CONFIG_INIT_PERIODIC(&timerConfig, CrosTcss_EvtWatchdogTimer, 250);
     timerConfig.AutomaticSerialization = FALSE;
-    timerConfig.TolerableDelay = 500;  /* Allow 500ms tolerance for power efficiency */
+    timerConfig.TolerableDelay = 50;  /* 50ms tolerance for power efficiency */
 
     WDF_OBJECT_ATTRIBUTES_INIT(&timerAttributes);
     timerAttributes.ParentObject = device;
@@ -440,6 +440,7 @@ CrosTcss_EvtD0Entry(
      * so we must reprogram everything from scratch. */
     for (UINT8 i = 0; i < devCtx->PortCount; i++) {
         devCtx->Ports[i].PmcConfigured = FALSE;
+        devCtx->Ports[i].MuxState = 0xFF;  /* Force fresh evaluation against EC */
         devCtx->Ports[i].LastModeData = 0;
         devCtx->Ports[i].LastPortMap = 0;
 
@@ -450,17 +451,15 @@ CrosTcss_EvtD0Entry(
         }
     }
 
-    /* Brief delay to let the EC stabilize after system resume */
-    if (PreviousState != WdfPowerDeviceD3Final) {
-        delay.QuadPart = -500000LL;  /* 50ms */
-        KeDelayExecutionThread(KernelMode, FALSE, &delay);
-    }
+    /* Brief delay to let the EC stabilize after boot / system resume */
+    delay.QuadPart = -500000LL;  /* 50ms */
+    KeDelayExecutionThread(KernelMode, FALSE, &delay);
 
     /* Process all ports to reprogram the PMC crossbar */
     CrosTcss_ProcessAllPorts(devCtx);
 
-    /* Start the watchdog timer */
-    WdfTimerStart(devCtx->WatchdogTimer, WDF_REL_TIMEOUT_IN_MS(2000));
+    /* Start the watchdog timer (250ms interval) */
+    WdfTimerStart(devCtx->WatchdogTimer, WDF_REL_TIMEOUT_IN_MS(250));
 
     KdPrintEx((DPFLTR_DEFAULT_ID, DPFLTR_INFO_LEVEL,
         "CrosTcssMux: D0 entry complete — watchdog started\n"));

@@ -738,8 +738,8 @@ CrosTcss_BuildModeData(
         CrosTcss_QueryCableVdo(PortIndex, &port->CableVdo, &port->TbtCableVdo);
     }
 
-    /* Also fetch full TYPEC_STATUS for extended fields */
-    {
+    /* Also fetch full TYPEC_STATUS for extended fields if port is active */
+    if (MuxState != USB_PD_MUX_NONE) {
         EC_TYPEC_STATUS_RESPONSE typecStatus;
         status = CrosTcss_QueryTypecStatus(PortIndex, &typecStatus);
         if (NT_SUCCESS(status)) {
@@ -747,6 +747,10 @@ CrosTcss_BuildModeData(
             port->DataRole = typecStatus.DataRole;
             port->DpPinMode = typecStatus.DpPinMode;
         }
+    } else {
+        port->Polarity = 0;
+        port->DataRole = 1;  /* Default DFP */
+        port->DpPinMode = 'C';
     }
 
     /* Extract cable speed from Product Type VDO1 */
