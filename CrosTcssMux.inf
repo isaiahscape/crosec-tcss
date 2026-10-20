@@ -1,0 +1,93 @@
+;
+; CrosTcssMux.inf — PnP Installation Manifest
+;
+; Installs CrosTcssMux.sys as a function driver for the ChromeOS EC
+; Type-C connector node (ACPI\GOOG0014) to bridge the EC and Intel
+; PMC North Mux-Agent for USB-C mux control.
+;
+; Copyright (c) 2026. Licensed under the MIT License.
+;
+
+[Version]
+Signature   = "$WINDOWS NT$"
+Class       = System
+ClassGuid   = {4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider    = %ProviderName%
+CatalogFile = CrosTcssMux.cat
+DriverVer   = 10/20/2026,1.0.0.0
+PnpLockdown = 1
+
+[DestinationDirs]
+DefaultDestDir = 13  ; Driver Store
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+CrosTcssMux.sys = 1,,
+
+; =========================================================================
+; Device Installation
+; =========================================================================
+
+[Manufacturer]
+%ManufacturerName% = Standard,NTamd64.10.0...16299
+
+[Standard.NTamd64.10.0...16299]
+%DeviceDesc% = CrosTcssMux_Install, ACPI\VEN_GOOG&DEV_0014
+%DeviceDesc% = CrosTcssMux_Install, ACPI\GOOG0014
+%DeviceDesc% = CrosTcssMux_Install, *GOOG0014
+
+; =========================================================================
+; DDInstall Section
+; =========================================================================
+
+[CrosTcssMux_Install.NTamd64]
+CopyFiles = CrosTcssMux_CopyFiles
+
+[CrosTcssMux_CopyFiles]
+CrosTcssMux.sys
+
+[CrosTcssMux_Install.NTamd64.HW]
+AddReg = CrosTcssMux_HW_AddReg
+
+[CrosTcssMux_HW_AddReg]
+; Allow the driver to access I/O ports (LPC) and MMIO (PMC IPC)
+HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GA;;;BA)"
+
+; =========================================================================
+; Service Installation
+; =========================================================================
+
+[CrosTcssMux_Install.NTamd64.Services]
+AddService = CrosTcssMux, 0x00000002, CrosTcssMux_Service_Install
+
+[CrosTcssMux_Service_Install]
+DisplayName    = %ServiceDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %13%\CrosTcssMux.sys
+Dependencies   = crosec             ; Depends on ChromeOS EC driver
+LoadOrderGroup = Extended Base
+
+; =========================================================================
+; WDF Co-installer (KMDF 1.33)
+; =========================================================================
+
+[CrosTcssMux_Install.NTamd64.Wdf]
+KmdfService = CrosTcssMux, CrosTcssMux_wdfsect
+
+[CrosTcssMux_wdfsect]
+KmdfLibraryVersion = 1.33
+
+; =========================================================================
+; Strings
+; =========================================================================
+
+[Strings]
+ProviderName     = "CrosTcssMux"
+ManufacturerName = "Open Source Community"
+DeviceDesc       = "ChromeOS TCSS Mux Controller"
+ServiceDesc      = "ChromeOS EC to Intel PMC USB-C Mux Bridge Driver"
+DiskName         = "CrosTcssMux Installation Disk"

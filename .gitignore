@@ -1,0 +1,40 @@
+# Build artifacts and intermediate files
+bin/
+obj/
+x64/
+x86/
+arm64/
+Debug/
+Release/
+[Dd]ebug/
+[Rr]elease/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Compilation / linking outputs
+*.obj
+*.iobj
+*.ipdb
+*.pdb
+*.sys
+*.tlog
+*.lastbuildstate
+*.recipe
+*.log
+
+# Driver signing certificates & catalogs
+*.cer
+*.pfx
+*.p7b
+*.cat
+*.chk
+
+# Crash dumps & temp files
+*.dmp
+*.tmp
+minidump.dmp
